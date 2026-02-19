@@ -1,0 +1,12 @@
+{
+  "language": "pt",
+  "hotkey": "super+v",
+  "vad_aggressiveness": 2,
+  "silence_threshold_ms": 800,
+  "typing_delay_ms": 12,
+  "auto_capitalize": true,
+  "audio_device_index": null,
+  "log_level": "INFO",
+  "extra_fillers": [],
+  "extra_punctuation": {}
+}

@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# Virtual environment
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VozTerminal config (contém paths locais)
+# API keys ficam em env vars, não em arquivos
+
+# Logs
+*.log
+
+# Claude
+.claude/

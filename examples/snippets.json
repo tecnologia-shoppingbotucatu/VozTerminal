@@ -1,0 +1,7 @@
+{
+  "git commit": "git commit -m \"\"",
+  "git push": "git push origin main",
+  "docker up": "docker-compose up -d",
+  "importar pandas": "import pandas as pd",
+  "shebang python": "#!/usr/bin/env python3"
+}
