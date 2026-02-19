@@ -85,6 +85,14 @@ def status():
 
 
 @cli.command()
+def gui():
+    """Abre a interface gráfica de configurações."""
+    from vozterminal.gui import VozTerminalGUI
+    app = VozTerminalGUI()
+    app.mainloop()
+
+
+@cli.command()
 def init():
     """Inicializa configuração (cria ~/.vozterminal/ e arquivos padrão)."""
     config = Config()

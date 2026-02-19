@@ -15,10 +15,14 @@ dependencies = [
     "openai>=1.40.0",
     "pynput>=1.7.6",
     "click>=8.1.0",
+    "customtkinter>=5.2.0",
 ]
 
 [project.scripts]
 vozterminal = "vozterminal.cli:cli"
+
+[project.gui-scripts]
+vozterminal-gui = "vozterminal.gui:main"
 
 [project.optional-dependencies]
 dev = [

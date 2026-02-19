@@ -71,16 +71,16 @@ class Config:
 
         return config
 
-    def save(self) -> None:
-        """Salva config no arquivo. API keys NÃO são salvas."""
+    def save(self, save_keys: bool = False) -> None:
+        """Salva config no arquivo. API keys salvas apenas se save_keys=True."""
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         data = asdict(self)
         # Converte Path para string para JSON
         for key in ("dictionary_path", "snippets_path", "log_file"):
             data[key] = str(data[key])
-        # NÃO salva API keys no arquivo
-        data.pop("groq_api_key", None)
-        data.pop("openai_api_key", None)
+        if not save_keys:
+            data.pop("groq_api_key", None)
+            data.pop("openai_api_key", None)
         with open(CONFIG_FILE, "w") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         logger.info(f"Config salvo em {CONFIG_FILE}")
