@@ -71,10 +71,11 @@ Usuario fala → Microfone → VAD → Transcricao API → Processamento → xdo
                    │ Texto processado
                    v
 ┌──────────────────────────────────────────────────────────┐
-│  TextInserter (inserter.py)                              │
+│  TextInserter (inserter.py) - Multiplataforma            │
 │                                                          │
-│  xdotool type --clearmodifiers --delay 12 -- "texto"     │
-│  Insere na janela que estiver em foco (X11)              │
+│  Linux:   xdotool type --clearmodifiers --delay 12       │
+│  Windows: SendInput + KEYEVENTF_UNICODE (Win32 API)      │
+│  Insere na janela que estiver em foco                    │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -86,7 +87,7 @@ Usuario fala → Microfone → VAD → Transcricao API → Processamento → xdo
 | Audio | `audio.py` | Captura PyAudio + VAD webrtcvad + filtro RMS |
 | Transcriber | `transcriber.py` | Groq API + fallback OpenAI, PCM→WAV em memoria |
 | TextProcessor | `text_processor.py` | Pipeline de 6 etapas de pos-processamento |
-| Inserter | `inserter.py` | xdotool type na janela ativa |
+| Inserter | `inserter.py` | Multiplataforma: xdotool (Linux) / SendInput (Windows) |
 | Hotkey | `hotkey.py` | pynput Listener, suporta F1-F12 e combinacoes |
 | Dictionary | `dictionary.py` | CRUD dicionario + snippets em JSON |
 | Daemon | `daemon.py` | Orquestra tudo + filtro anti-alucinacao |
@@ -98,7 +99,9 @@ Usuario fala → Microfone → VAD → Transcricao API → Processamento → xdo
 ```
 Prioridade: env vars > config.json
 
-~/.vozterminal/
+Linux:   ~/.vozterminal/
+Windows: %APPDATA%\VozTerminal\
+
   config.json       # Configuracoes gerais
   dictionary.json   # Dicionario pessoal {"errado": "correto"}
   snippets.json     # Snippets {"nome": "texto expandido"}
@@ -160,18 +163,45 @@ Framework: CustomTkinter (dark mode, tema blue)
 ## Build e Distribuicao
 
 ```
-PyInstaller (vozterminal.spec)
+PyInstaller (vozterminal.spec) - Multiplataforma
   Entry point: src/vozterminal/gui.py
-  Binarios:    libportaudio.so.2 (bundled)
   Dados:       CustomTkinter themes/assets
-  Hidden:      Todos os modulos + groq/openai/pynput/Xlib
   Excludes:    matplotlib, numpy, pandas, scipy
-  Output:      dist/VozTerminal (~26MB, ELF 64-bit)
+
+  Linux:
+    Binarios:  libportaudio.so.2 (bundled manualmente)
+    Hidden:    pynput._xorg, Xlib
+    Output:    dist/VozTerminal (~26MB, ELF 64-bit)
+    Script:    build_exe.sh
+
+  Windows:
+    Binarios:  portaudio.dll (incluso na wheel do PyAudio)
+    Hidden:    pynput._win32, ctypes.wintypes
+    Output:    dist\VozTerminal.exe
+    Script:    build_exe.bat
 
 Scripts:
-  build_exe.sh         → Gera dist/VozTerminal
+  build_exe.sh         → Gera dist/VozTerminal (Linux)
+  build_exe.bat        → Gera dist\VozTerminal.exe (Windows)
   install_desktop.sh   → Cria atalho .desktop no Linux
 ```
+
+## Suporte Multiplataforma
+
+O VozTerminal usa deteccao de plataforma (`sys.platform`) para adaptar componentes:
+
+| Componente | Linux | Windows |
+|-----------|-------|---------|
+| Insercao de texto | xdotool (X11) | SendInput + KEYEVENTF_UNICODE (Win32) |
+| Config dir | `~/.vozterminal/` | `%APPDATA%\VozTerminal\` |
+| PID file | `$XDG_RUNTIME_DIR` ou `/tmp` | `%TEMP%` |
+| Background daemon | `os.fork()` + `os.setsid()` | `subprocess.Popen` + `CREATE_NO_WINDOW` |
+| Stop daemon | `os.kill(SIGTERM)` | `taskkill /PID /F` |
+| Verificar processo | `os.kill(pid, 0)` | `kernel32.OpenProcess` |
+| Hotkey | pynput `_xorg` backend | pynput `_win32` backend |
+| Audio | PyAudio + libportaudio.so | PyAudio + portaudio.dll (na wheel) |
+
+Modulos 100% cross-platform (sem mudanca): audio.py, transcriber.py, text_processor.py, dictionary.py, hotkey.py, gui.py (CustomTkinter).
 
 ## Dependencias
 
@@ -186,8 +216,11 @@ Scripts:
 | click | >=8.1.0 | CLI |
 | customtkinter | >=5.2.0 | GUI |
 
-### Sistema
+### Sistema (Linux apenas)
 | Pacote | Comando | Uso |
 |--------|---------|-----|
 | portaudio19-dev | `sudo apt install portaudio19-dev` | Biblioteca de audio |
 | xdotool | `sudo apt install xdotool` | Insercao de texto (X11) |
+
+### Sistema (Windows)
+Nenhuma dependencia de sistema. PyAudio e pynput usam Win32 API nativa.

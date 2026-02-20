@@ -4,6 +4,7 @@ import os
 import sys
 import signal
 import logging
+import subprocess
 
 import click
 
@@ -14,7 +15,7 @@ from vozterminal.daemon import VozTerminalDaemon
 @click.group()
 @click.version_option(package_name="vozterminal")
 def cli():
-    """VozTerminal - Ditado por voz para terminais Linux."""
+    """VozTerminal - Ditado por voz para terminais."""
     pass
 
 
@@ -52,6 +53,16 @@ def start(foreground: bool):
         click.echo("Pressione Ctrl+C para parar.")
         daemon = VozTerminalDaemon(config)
         daemon.run()
+    elif sys.platform == "win32":
+        CREATE_NO_WINDOW = 0x08000000
+        proc = subprocess.Popen(
+            [sys.executable, "-m", "vozterminal", "start", "-f"],
+            creationflags=CREATE_NO_WINDOW,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        click.echo(f"VozTerminal iniciado em background (PID {proc.pid}). Hotkey: {config.hotkey}")
+        sys.exit(0)
     else:
         pid = os.fork()
         if pid > 0:
@@ -68,7 +79,13 @@ def stop():
     """Para o daemon."""
     pid = VozTerminalDaemon.is_running()
     if pid:
-        os.kill(pid, signal.SIGTERM)
+        if sys.platform == "win32":
+            subprocess.run(
+                ["taskkill", "/PID", str(pid), "/F"],
+                capture_output=True,
+            )
+        else:
+            os.kill(pid, signal.SIGTERM)
         click.echo(f"VozTerminal parado (PID {pid}).")
     else:
         click.echo("VozTerminal não está rodando.")

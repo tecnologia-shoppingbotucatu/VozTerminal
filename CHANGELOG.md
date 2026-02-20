@@ -4,6 +4,33 @@ Todas as mudancas notaveis do VozTerminal serao documentadas neste arquivo.
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.2.0] - 2026-02-20
+
+### Adicionado
+
+#### Suporte Windows
+- Inserção de texto via Win32 SendInput com KEYEVENTF_UNICODE (suporte completo a acentos PT-BR)
+- Strategy Pattern no inserter: LinuxInserter (xdotool) + WindowsInserter (SendInput) + TextInserter (facade)
+- Caminhos de configuração multiplataforma: `%APPDATA%\VozTerminal\` no Windows
+- Background daemon no Windows via `subprocess.Popen` com `CREATE_NO_WINDOW`
+- Stop daemon no Windows via `taskkill`
+- Verificação de processo no Windows via `kernel32.OpenProcess`
+- Script de build Windows (`build_exe.bat`)
+- PyInstaller spec multiplataforma (hidden imports condicionais: `_win32` vs `_xorg`)
+- Testes para seleção automática de plataforma no inserter
+
+#### Melhorias
+- GUI mostra informações de pré-requisitos adequadas por plataforma
+- Versão bump para 0.2.0
+- Documentação atualizada para Linux + Windows
+
+### Mantido
+- Toda funcionalidade Linux existente sem alteração
+- 31 testes existentes continuam passando
+- Compatibilidade com executável Linux (build_exe.sh)
+
+---
+
 ## [0.1.0] - 2026-02-19
 
 ### Adicionado

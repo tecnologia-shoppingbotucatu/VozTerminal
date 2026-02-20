@@ -1,8 +1,10 @@
 """Daemon principal do VozTerminal. Orquestra todos os componentes."""
 
 import os
+import sys
 import signal
 import logging
+import tempfile
 import threading
 from pathlib import Path
 
@@ -16,7 +18,15 @@ from vozterminal.dictionary import Dictionary
 
 logger = logging.getLogger("vozterminal")
 
-PID_FILE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "vozterminal.pid"
+
+def _get_pid_file() -> Path:
+    """Retorna caminho do PID file adequado para a plataforma."""
+    if sys.platform == "win32":
+        return Path(tempfile.gettempdir()) / "vozterminal.pid"
+    return Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "vozterminal.pid"
+
+
+PID_FILE = _get_pid_file()
 
 
 class VozTerminalDaemon:
@@ -158,8 +168,9 @@ class VozTerminalDaemon:
             self._inserter.insert(processed)
 
     def _setup_signals(self) -> None:
-        signal.signal(signal.SIGTERM, lambda *_: self._shutdown_event.set())
         signal.signal(signal.SIGINT, lambda *_: self._shutdown_event.set())
+        if sys.platform != "win32":
+            signal.signal(signal.SIGTERM, lambda *_: self._shutdown_event.set())
 
     def _write_pid_file(self) -> None:
         PID_FILE.write_text(str(os.getpid()))
@@ -173,8 +184,21 @@ class VozTerminalDaemon:
         if PID_FILE.exists():
             try:
                 pid = int(PID_FILE.read_text().strip())
-                os.kill(pid, 0)  # Checa se processo existe
-                return pid
+                if sys.platform == "win32":
+                    import ctypes
+                    kernel32 = ctypes.windll.kernel32
+                    PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+                    handle = kernel32.OpenProcess(
+                        PROCESS_QUERY_LIMITED_INFORMATION, False, pid
+                    )
+                    if handle:
+                        kernel32.CloseHandle(handle)
+                        return pid
+                    else:
+                        PID_FILE.unlink(missing_ok=True)
+                else:
+                    os.kill(pid, 0)  # Checa se processo existe
+                    return pid
             except (OSError, ValueError):
                 PID_FILE.unlink(missing_ok=True)
         return None

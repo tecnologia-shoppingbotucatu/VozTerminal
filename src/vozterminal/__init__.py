@@ -1,3 +1,3 @@
-"""VozTerminal - Ditado por voz para terminais Linux."""
+"""VozTerminal - Ditado por voz para terminais."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

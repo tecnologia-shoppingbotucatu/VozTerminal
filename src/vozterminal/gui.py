@@ -371,14 +371,19 @@ class VozTerminalGUI(ctk.CTk):
 
         ctk.CTkLabel(
             tab,
-            text="Ditado por voz para terminais Linux",
+            text="Ditado por voz para terminais",
             font=ctk.CTkFont(size=16),
         ).grid(row=2, column=0, pady=5)
+
+        if sys.platform == "win32":
+            inserter_info = "Inserção via SendInput (Win32 API) na janela ativa."
+        else:
+            inserter_info = "Inserção via xdotool na janela ativa."
 
         info_text = (
             "Transcrição via Groq API (Whisper) com fallback OpenAI.\n"
             "Detecção de voz com webrtcvad + filtro de energia RMS.\n"
-            "Inserção via xdotool na janela ativa.\n\n"
+            f"{inserter_info}\n\n"
             "Desenvolvido por Tiago Cruz\n"
             "Shopping Botucatu - Tecnologia"
         )
@@ -390,9 +395,14 @@ class VozTerminalGUI(ctk.CTk):
             justify="center",
         ).grid(row=3, column=0, pady=10, padx=20)
 
+        if sys.platform == "win32":
+            prereqs = "Pré-requisitos: microfone configurado"
+        else:
+            prereqs = "Pré-requisitos: xdotool, portaudio19-dev"
+
         ctk.CTkLabel(
             tab,
-            text="Pré-requisitos: xdotool, portaudio19-dev",
+            text=prereqs,
             font=ctk.CTkFont(size=11),
             text_color="#666",
         ).grid(row=4, column=0, pady=(20, 5))

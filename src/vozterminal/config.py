@@ -1,6 +1,7 @@
 """Sistema de configuração do VozTerminal."""
 
 import os
+import sys
 import json
 import logging
 from pathlib import Path
@@ -8,7 +9,18 @@ from dataclasses import dataclass, field, asdict
 
 logger = logging.getLogger("vozterminal.config")
 
-CONFIG_DIR = Path.home() / ".vozterminal"
+
+def _get_config_dir() -> Path:
+    """Retorna diretório de configuração adequado para a plataforma."""
+    if sys.platform == "win32":
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return Path(appdata) / "VozTerminal"
+        return Path.home() / "AppData" / "Roaming" / "VozTerminal"
+    return Path.home() / ".vozterminal"
+
+
+CONFIG_DIR = _get_config_dir()
 CONFIG_FILE = CONFIG_DIR / "config.json"
 DICTIONARY_FILE = CONFIG_DIR / "dictionary.json"
 SNIPPETS_FILE = CONFIG_DIR / "snippets.json"
